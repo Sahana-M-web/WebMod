@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html ng-app="hotelApp">
+
+<head>
+    <title>Hotel Management System</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: darkblue;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 6px;
+        }
+
+        input, select {
+            width: 200px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .add {
+            background: green;
+            color: white;
+        }
+
+        .edit {
+            background: orange;
+        }
+
+        .delete {
+            background: red;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #999;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: lightblue;
+        }
+
+        .message {
+            text-align: center;
+            color: green;
+        }
+    </style>
+</head>
+
+<body ng-controller="hotelCtrl">
+
+    <div class="container">
+
+        <h1>Hotel Management System</h1>
+
+        <h2>Room Booking Form</h2>
+
+        <form ng-submit="saveBooking()">
+
+            <input type="text"
+                   ng-model="booking.guest"
+                   placeholder="Guest Name"
+                   required>
+
+            <input type="text"
+                   ng-model="booking.room"
+                   placeholder="Room Number"
+                   required>
+
+            <select ng-model="booking.type" required>
+                <option value="">Select Room Type</option>
+                <option>Single</option>
+                <option>Double</option>
+                <option>Deluxe</option>
+            </select>
+
+            <input type="date"
+                   ng-model="booking.date"
+                   required>
+
+            <br>
+
+            <button type="submit" class="add">
+                {{editIndex === -1 ? 'Book Room' : 'Update Booking'}}
+            </button>
+
+        </form>
+
+        <p class="message">{{message}}</p>
+
+        <h2>Booking Details</h2>
+
+        <table>
+            <tr>
+                <th>Guest Name</th>
+                <th>Room No.</th>
+                <th>Room Type</th>
+                <th>Booking Date</th>
+                <th>Actions</th>
+            </tr>
+
+            <tr ng-repeat="b in bookings track by $index">
+                <td>{{b.guest}}</td>
+                <td>{{b.room}}</td>
+                <td>{{b.type}}</td>
+                <td>{{b.date | date:'dd-MM-yyyy'}}</td>
+
+                <td>
+                    <button class="edit"
+                            ng-click="editBooking($index)">
+                        Edit
+                    </button>
+
+                    <button class="delete"
+                            ng-click="deleteBooking($index)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+
+            <tr ng-if="bookings.length === 0">
+                <td colspan="5">No bookings available</td>
+            </tr>
+        </table>
+
+    </div>
+
+    <script>
+        var app = angular.module("hotelApp", []);
+
+        app.controller("hotelCtrl", function($scope) {
+
+            $scope.bookings = [];
+            $scope.booking = {};
+            $scope.editIndex = -1;
+            $scope.message = "";
+
+            $scope.saveBooking = function() {
+
+                if ($scope.editIndex === -1) {
+
+                    $scope.bookings.push(
+                        angular.copy($scope.booking)
+                    );
+
+                    $scope.message = "Room booked successfully!";
+
+                } else {
+
+                    $scope.bookings[$scope.editIndex] =
+                        angular.copy($scope.booking);
+
+                    $scope.message = "Booking updated successfully!";
+                }
+
+                $scope.booking = {};
+                $scope.editIndex = -1;
+            };
+
+            $scope.editBooking = function(index) {
+
+                $scope.booking =
+                    angular.copy($scope.bookings[index]);
+
+                $scope.editIndex = index;
+                $scope.message = "Edit the details and click Update Booking.";
+            };
+
+            $scope.deleteBooking = function(index) {
+
+                $scope.bookings.splice(index, 1);
+
+                $scope.message = "Booking deleted successfully!";
+            };
+
+        });
+    </script>
+
+</body>
+</html>
