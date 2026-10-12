@@ -1,0 +1,120 @@
+node -v
+npm -v
+
+create folder open in vs run npm init -y and npm install selenium-webdriver
+
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html ng-app="bookApp">
+
+<head>
+    <title>Book Management</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+
+<body ng-controller="bookController">
+
+    <h2>Book Management System</h2>
+
+    <input
+        type="text"
+        id="bookName"
+        ng-model="bookName"
+        placeholder="Enter book name"
+    >
+
+    <button id="addBtn" ng-click="addBook()">
+        Add Book
+    </button>
+
+    <p id="result">{{message}}</p>
+
+    <script>
+        var app = angular.module("bookApp", []);
+
+        app.controller("bookController", function($scope) {
+
+            $scope.addBook = function() {
+
+                if ($scope.bookName && $scope.bookName.trim()) {
+
+                    $scope.message = "Book added: " + $scope.bookName;
+
+                } else {
+
+                    $scope.message = "Please enter a book name";
+
+                }
+            };
+
+        });
+    </script>
+
+</body>
+</html>
+```
+
+
+create test.js
+
+```javascript
+const { Builder, By, until } = require("selenium-webdriver");
+
+async function testBookApp() {
+
+    const driver = await new Builder()
+        .forBrowser("chrome")
+        .build();
+
+    try {
+
+        await driver.get("http://localhost:3000");
+
+        await driver.findElement(By.id("bookName"))
+            .sendKeys("Java Programming");
+
+        await driver.findElement(By.id("addBtn"))
+            .click();
+
+        const result = await driver.findElement(By.id("result"));
+
+        await driver.wait(
+            until.elementTextIs(result, "Book added: Java Programming"),
+            5000
+        );
+
+        console.log("TEST PASSED");
+
+    } catch (error) {
+
+        console.log("TEST FAILED:", error.message);
+
+    } finally {
+
+        await driver.quit();
+
+    }
+}
+
+testBookApp();
+```
+
+
+start angu
+npm install --save-dev http-server
+
+exe
+npx http-server -p 3000
+
+Open Chrome and enter:
+http://localhost:3000
+Enter book name
+
+
+open two terminals
+term 1 angular 
+term 2 test - node test.js
