@@ -1,0 +1,154 @@
+Step 1: Create the project folder
+Open VS Code.
+create xml,xsl and dtd
+
+dtd
+
+<!ELEMENT students (student+)>
+<!ELEMENT student (rollno, name, department, year)>
+<!ELEMENT rollno (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT department (#PCDATA)>
+<!ELEMENT year (#PCDATA)>
+
+xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE students SYSTEM "student.dtd">
+
+<?xml-stylesheet type="text/xsl" href="student.xsl"?>
+
+<students>
+
+    <student>
+        <rollno>101</rollno>
+        <name>Arun</name>
+        <department>IT</department>
+        <year>3</year>
+    </student>
+
+    <student>
+        <rollno>102</rollno>
+        <name>Priya</name>
+        <department>CSE</department>
+        <year>2</year>
+    </student>
+
+    <student>
+        <rollno>103</rollno>
+        <name>Rahul</name>
+        <department>ECE</department>
+        <year>3</year>
+    </student>
+
+</students>
+
+
+xsl
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsl:stylesheet
+    version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+    <xsl:template match="/">
+
+        <html>
+        <head>
+            <title>Student Details</title>
+
+            <style>
+                body {
+                    font-family: Arial;
+                    text-align: center;
+                    background-color: #f0f8ff;
+                }
+
+                table {
+                    margin: auto;
+                    border-collapse: collapse;
+                    width: 70%;
+                }
+
+                th, td {
+                    border: 1px solid black;
+                    padding: 12px;
+                }
+
+                th {
+                    background-color: lightblue;
+                }
+            </style>
+        </head>
+
+        <body>
+
+            <h2>Student Details</h2>
+
+            <table>
+                <tr>
+                    <th>Roll Number</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                </tr>
+
+                <xsl:for-each select="students/student">
+                    <tr>
+                        <td><xsl:value-of select="rollno"/></td>
+                        <td><xsl:value-of select="name"/></td>
+                        <td><xsl:value-of select="department"/></td>
+                        <td><xsl:value-of select="year"/></td>
+                    </tr>
+                </xsl:for-each>
+
+            </table>
+
+        </body>
+        </html>
+
+    </xsl:template>
+
+</xsl:stylesheet>
+
+
+open ext and install live server run with ls
+if unavail go live 
+
+
+
+or python lxml lib'
+
+python -m pip install lxml
+
+transform.py
+
+
+from lxml import etree
+
+# Read the XML file
+xml = etree.parse("student.xml")
+
+# Read the XSLT file
+xslt = etree.parse("student.xsl")
+
+# Create the transformation
+transform = etree.XSLT(xslt)
+
+# Transform XML into HTML
+result = transform(xml)
+
+# Save the HTML output
+with open("student.html", "wb")as file:
+    file.write(etree.toString(result,
+method="html",
+pretty_print=True,
+encoding="UTF-8"))
+
+
+python transform.py
+
+print("XML transformed into HTML successfully!")
+print("Open student.html in your browser.")
