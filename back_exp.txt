@@ -1,0 +1,51 @@
+node -v
+npm -v
+
+mkdir HotelBackend
+cd HotelBackend
+npm init -y
+npm install express
+
+
+```javascript
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+let bookings = [];
+
+// Home route
+app.get("/", (req, res) => {
+    res.send("Hotel Backend is Running!");
+});
+
+// Get all bookings
+app.get("/bookings", (req, res) => {
+    res.json(bookings);
+});
+
+// Add a booking
+app.post("/bookings", (req, res) => {
+    bookings.push(req.body);
+    res.send("Booking Added Successfully!");
+});
+
+// Delete a booking
+app.delete("/bookings/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    if (id < 0 || id >= bookings.length ||
+        !Number.isInteger(id)) {
+        return res.status(404).send("Booking Not Found");
+    }
+
+    bookings.splice(id, 1);
+    res.send("Booking Deleted Successfully!");
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running at http://localhost:3000");
+});
+```
