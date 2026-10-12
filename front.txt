@@ -1,0 +1,224 @@
+```html
+<!DOCTYPE html>
+<html ng-app="hotelApp">
+<head>
+    <title>Hotel Management System</title>
+
+    <!-- AngularJS libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f0f4f8;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid gray;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: lightblue;
+        }
+
+        .message {
+            background: lightgreen;
+            padding: 10px;
+            transition: all 0.6s;
+        }
+
+        .message.ng-hide {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+
+<body ng-controller="hotelCtrl">
+
+<div class="container">
+
+    <h1>{{hotelName}}</h1>
+    <h2>Room Booking Form</h2>
+
+    <!-- Booking form -->
+    <form ng-submit="saveBooking()">
+
+        <input ng-model="booking.guest"
+               placeholder="Guest Name" required>
+
+        <input ng-model="booking.room"
+               placeholder="Room Number" required>
+
+        <select ng-model="booking.type" required>
+            <option value="">Select Room Type</option>
+            <option>Single</option>
+            <option>Double</option>
+            <option>Deluxe</option>
+        </select>
+
+        <button type="submit">
+            {{editIndex == -1 ? 'Book Room' : 'Update Booking'}}
+        </button>
+
+    </form>
+
+    <!-- Animation -->
+    <p class="message" ng-show="showMessage">
+        {{message}}
+    </p>
+
+    <button ng-click="showMessage = !showMessage">
+        Show / Hide Message
+    </button>
+
+    <h2>Booking Details</h2>
+
+    <!-- Built-in filter and custom filter -->
+    <p>Total Bookings: {{bookings.length}}</p>
+    <p>Hotel Name: {{hotelName | uppercase}}</p>
+
+    <table>
+        <tr>
+            <th>Guest</th>
+            <th>Room</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+
+        <tr ng-repeat="b in bookings | orderBy:'guest'">
+            <td>{{b.guest | nameFormat}}</td>
+            <td>{{b.room}}</td>
+            <td>{{b.type}}</td>
+            <td>{{getPrice(b.type) | currency:'₹'}}</td>
+            <td>
+                <button ng-click="editBooking($index)">Edit</button>
+                <button ng-click="deleteBooking($index)">Delete</button>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Custom directive -->
+    <hotel-message></hotel-message>
+
+</div>
+
+<script>
+    // Module and animation dependency
+    var app = angular.module("hotelApp", ["ngAnimate"]);
+
+    // 1. VALUE
+    app.value("hotelName", "Grand Hotel");
+
+    // 2. SERVICE
+    app.service("roomService", function() {
+        this.getPrice = function(type) {
+            if (type == "Single") return 1000;
+            if (type == "Double") return 2000;
+            if (type == "Deluxe") return 3000;
+            return 0;
+        };
+    });
+
+    // 3. CUSTOM FILTER
+    app.filter("nameFormat", function() {
+        return function(input) {
+            if (!input) return "";
+            return input.toUpperCase();
+        };
+    });
+
+    // 4. FACTORY
+    app.factory("bookingFactory", function() {
+        return {
+            copyBooking: function(booking) {
+                return angular.copy(booking);
+            }
+        };
+    });
+
+    // 5. CUSTOM DIRECTIVE
+    app.directive("hotelMessage", function() {
+        return {
+            restrict: "E",
+            template: "<h3>Welcome! Thank you for choosing our hotel.</h3>"
+        };
+    });
+
+    // 6. CONTROLLER AND DEPENDENCY INJECTION
+    app.controller("hotelCtrl", function(
+        $scope, hotelName, roomService, bookingFactory
+    ) {
+        $scope.hotelName = hotelName;
+        $scope.bookings = [];
+        $scope.booking = {};
+        $scope.editIndex = -1;
+        $scope.showMessage = true;
+        $scope.message = "Welcome to our hotel!";
+
+        // Get room price using service
+        $scope.getPrice = function(type) {
+            return roomService.getPrice(type);
+        };
+
+        // Add or update booking
+        $scope.saveBooking = function() {
+            if ($scope.editIndex == -1) {
+                $scope.bookings.push(
+                    bookingFactory.copyBooking($scope.booking)
+                );
+                $scope.message = "Booking added successfully!";
+            } else {
+                $scope.bookings[$scope.editIndex] =
+                    bookingFactory.copyBooking($scope.booking);
+                $scope.message = "Booking updated successfully!";
+            }
+
+            $scope.booking = {};
+            $scope.editIndex = -1;
+            $scope.showMessage = true;
+        };
+
+        // Edit booking
+        $scope.editBooking = function(i) {
+            $scope.booking =
+                bookingFactory.copyBooking($scope.bookings[i]);
+            $scope.editIndex = i;
+            $scope.message = "Edit details and click Update Booking.";
+            $scope.showMessage = true;
+        };
+
+        // Delete booking
+        $scope.deleteBooking = function(i) {
+            $scope.bookings.splice(i, 1);
+            $scope.message = "Booking deleted successfully!";
+            $scope.showMessage = true;
+        };
+    });
+</script>
+
+</body>
+</html>
+```
