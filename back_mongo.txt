@@ -1,0 +1,97 @@
+node -v
+npm -v
+
+
+mongodb://127.0.0.1:27017
+
+
+mkdir HotelBackend
+cd HotelBackend
+npm init -y
+npm install express mongoose
+
+
+```javascript
+const express = require("express");
+const mongoose = require("mongoose");
+
+const app = express();
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/hoteldb")
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+// Booking schema
+const bookingSchema = new mongoose.Schema({
+    guest: String,
+    room: String,
+    type: String
+});
+
+// Booking model
+const Booking = mongoose.model("Booking", bookingSchema);
+
+// Home route
+app.get("/", (req, res) => {
+    res.send("Hotel Backend Running!");
+});
+
+// Add booking
+app.post("/bookings", async (req, res) => {
+    try {
+        const booking = await Booking.create(req.body);
+        res.status(201).json(booking);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// View all bookings
+app.get("/bookings", async (req, res) => {
+    try {
+        const bookings = await Booking.find();
+        res.json(bookings);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update booking
+app.put("/bookings/:id", async (req, res) => {
+    try {
+        const booking = await Booking.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!booking)
+            return res.status(404).send("Booking Not Found");
+
+        res.json(booking);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Delete booking
+app.delete("/bookings/:id", async (req, res) => {
+    try {
+        const booking = await Booking.findByIdAndDelete(req.params.id);
+
+        if (!booking)
+            return res.status(404).send("Booking Not Found");
+
+        res.send("Booking Deleted Successfully!");
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
+```
