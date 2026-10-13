@@ -1,0 +1,236 @@
+HotelManagement/
+│
+├── frontend/
+│   └── index.html
+│
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   └── node_modules/
+│
+└──
+
+
+
+mkdir HotelManagement
+cd HotelManagement
+mkdir frontend
+mkdir backend
+cd backend
+npm init -y
+npm install express mongoose cors
+
+
+
+notepad server.js(backend)
+
+```javascript
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/hoteldb")
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+// Schema
+const bookingSchema = new mongoose.Schema({
+    guest: String,
+    room: String,
+    type: String
+});
+
+// Model
+const Booking = mongoose.model("Booking", bookingSchema);
+
+// CREATE
+app.post("/bookings", async (req, res) => {
+    try {
+        const data = await Booking.create(req.body);
+        res.status(201).json(data);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// READ
+app.get("/bookings", async (req, res) => {
+    try {
+        const data = await Booking.find();
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// UPDATE
+app.put("/bookings/:id", async (req, res) => {
+    try {
+        const data = await Booking.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!data)
+            return res.status(404).json({ message: "Booking not found" });
+
+        res.json(data);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// DELETE
+app.delete("/bookings/:id", async (req, res) => {
+    try {
+        const data = await Booking.findByIdAndDelete(req.params.id);
+
+        if (!data)
+            return res.status(404).json({ message: "Booking not found" });
+
+        res.json({ message: "Booking deleted successfully" });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
+```
+
+
+notepad index.html(frontend)
+
+```html
+<!DOCTYPE html>
+<html ng-app="hotelApp">
+<head>
+    <title>Hotel Management System</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+
+<body ng-controller="hotelCtrl">
+
+<h1>Hotel Management System</h1>
+
+<form ng-submit="save()">
+    <input ng-model="booking.guest" placeholder="Guest Name" required>
+    <input ng-model="booking.room" placeholder="Room Number" required>
+
+    <select ng-model="booking.type" required>
+        <option value="">Select Room Type</option>
+        <option>Single</option>
+        <option>Double</option>
+        <option>Deluxe</option>
+    </select>
+
+    <button type="submit">
+        {{editId ? 'Update Booking' : 'Add Booking'}}
+    </button>
+</form>
+
+<p>{{message}}</p>
+
+<button ng-click="loadBookings()">View Bookings</button>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Guest</th>
+        <th>Room</th>
+        <th>Type</th>
+        <th>Actions</th>
+    </tr>
+
+    <tr ng-repeat="b in bookings">
+        <td>{{b.guest}}</td>
+        <td>{{b.room}}</td>
+        <td>{{b.type}}</td>
+        <td>
+            <button ng-click="edit(b)">Edit</button>
+            <button ng-click="remove(b._id)">Delete</button>
+        </td>
+    </tr>
+</table>
+
+<script>
+var app = angular.module("hotelApp", []);
+
+app.controller("hotelCtrl", function($scope, $http) {
+
+    $scope.booking = {};
+    $scope.bookings = [];
+    $scope.editId = null;
+    $scope.message = "";
+
+    // READ
+    $scope.loadBookings = function() {
+        $http.get("http://localhost:3000/bookings")
+        .then(function(response) {
+            $scope.bookings = response.data;
+        });
+    };
+
+    // CREATE and UPDATE
+    $scope.save = function() {
+        var request;
+
+        if ($scope.editId) {
+            request = $http.put(
+                "http://localhost:3000/bookings/" + $scope.editId,
+                $scope.booking
+            );
+        } else {
+            request = $http.post(
+                "http://localhost:3000/bookings",
+                $scope.booking
+            );
+        }
+
+        request.then(function() {
+            $scope.message = "Booking saved successfully!";
+            $scope.booking = {};
+            $scope.editId = null;
+            $scope.loadBookings();
+        }).catch(function() {
+            $scope.message = "Error saving booking. Check the server.";
+        });
+    };
+
+    // EDIT
+    $scope.edit = function(b) {
+        $scope.booking = {
+            guest: b.guest,
+            room: b.room,
+            type: b.type
+        };
+
+        $scope.editId = b._id;
+    };
+
+    // DELETE
+    $scope.remove = function(id) {
+        $http.delete("http://localhost:3000/bookings/" + id)
+        .then(function() {
+            $scope.message = "Booking deleted!";
+            $scope.loadBookings();
+        });
+    };
+
+    // Load bookings when page opens
+    $scope.loadBookings();
+});
+</script>
+
+</body>
+</html>
+```
