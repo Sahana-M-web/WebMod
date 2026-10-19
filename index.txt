@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="foodApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Ordering Application</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        input {
+            padding: 10px;
+            margin: 5px 5px 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 9px 14px;
+            margin: 4px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .save {
+            background: #218838;
+            color: white;
+        }
+
+        .clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #343a40;
+            color: white;
+        }
+
+        tbody tr {
+            animation: appear 0.35s ease-in;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message {
+            margin-top: 12px;
+            color: #176b35;
+        }
+
+        .error {
+            color: #c82333;
+        }
+
+        .total {
+            font-weight: bold;
+            margin-top: 18px;
+        }
+    </style>
+</head>
+
+<body ng-controller="foodCtrl">
+    <div class="container">
+        <h2>Food Ordering Application</h2>
+
+        <form ng-submit="saveFood()">
+            <input
+                type="text"
+                ng-model="food.name"
+                placeholder="Enter food name"
+                required
+            >
+
+            <input
+                type="number"
+                ng-model="food.price"
+                placeholder="Enter price"
+                min="0"
+                step="0.01"
+                required
+            >
+
+            <button class="save" type="submit">
+                {{ food._id ? 'Update Food' : 'Add Food' }}
+            </button>
+
+            <button class="clear" type="button" ng-click="clearForm()">
+                Clear
+            </button>
+        </form>
+
+        <p class="message"
+           ng-class="{'error': isError}"
+           role="status">
+            {{ message }}
+        </p>
+
+        <h3>Food Items</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Food Name</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr ng-repeat="f in foods track by f._id">
+                    <td>{{$index + 1}}</td>
+                    <td>{{f.name}}</td>
+                    <td>{{f.price | currency:"₹"}}</td>
+                    <td>
+                        <button class="edit"
+                                type="button"
+                                ng-click="editFood(f)">
+                            Edit
+                        </button>
+
+                        <button class="delete"
+                                type="button"
+                                ng-click="deleteFood(f._id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+
+                <tr ng-if="foods.length === 0">
+                    <td colspan="4">No food items found.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="total">
+            Total Items: {{foods.length}}
+        </p>
+    </div>
+
+    <script>
+        var app = angular.module("foodApp", []);
+
+        app.controller("foodCtrl", function($scope, $http) {
+            $scope.food = {};
+            $scope.foods = [];
+            $scope.message = "";
+            $scope.isError = false;
+
+            // Display messages
+            function showMessage(text, error) {
+                $scope.message = text;
+                $scope.isError = !!error;
+            }
+
+            // VIEW FOOD ITEMS
+            $scope.loadFoods = function() {
+                $http.get("/foods").then(
+                    function(response) {
+                        $scope.foods = response.data;
+                    },
+                    function(error) {
+                        showMessage(
+                            error.data && error.data.error
+                                ? error.data.error
+                                : "Cannot load foods. Check the server.",
+                            true
+                        );
+                    }
+                );
+            };
+
+            // ADD OR UPDATE FOOD
+            $scope.saveFood = function() {
+                var request;
+
+                if (!$scope.food.name ||
+                    $scope.food.price === undefined ||
+                    $scope.food.price === null ||
+                    $scope.food.price === "") {
+                    showMessage("Enter food name and price.", true);
+                    return;
+                }
+
+                if ($scope.food._id) {
+                    request = $http.put(
+                        "/foods/" + $scope.food._id,
+                        $scope.food
+                    );
+                } else {
+                    request = $http.post("/foods", $scope.food);
+                }
+
+                request.then(
+                    function(response) {
+                        showMessage(response.data.message, false);
+                        $scope.clearForm();
+                        $scope.loadFoods();
+                    },
+                    function(error) {
+                        showMessage(
+                            error.data && error.data.error
+                                ? error.data.error
+                                : "Save failed. Check the server.",
+                            true
+                        );
+                    }
+                );
+            };
+
+            // SELECT FOOD FOR EDITING
+            $scope.editFood = function(item) {
+                $scope.food = {
+                    _id: item._id,
+                    name: item.name,
+                    price: item.price
+                };
+
+                showMessage("Edit the details and click Update Food.", false);
+            };
+
+            // DELETE FOOD
+            $scope.deleteFood = function(id) {
+                if (!confirm("Are you sure you want to delete this food?")) {
+                    return;
+                }
+
+                $http.delete("/foods/" + id).then(
+                    function(response) {
+                        showMessage(response.data.message, false);
+                        $scope.clearForm();
+                        $scope.loadFoods();
+                    },
+                    function(error) {
+                        showMessage(
+                            error.data && error.data.error
+                                ? error.data.error
+                                : "Delete failed. Check the server.",
+                            true
+                        );
+                    }
+                );
+            };
+
+            // CLEAR FORM
+            $scope.clearForm = function() {
+                $scope.food = {};
+            };
+
+            // LOAD ITEMS WHEN PAGE OPENS
+            $scope.loadFoods();
+        });
+    </script>
+</body>
+</html>
