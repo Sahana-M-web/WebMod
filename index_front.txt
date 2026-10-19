@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="en" ng-app="foodApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Food Ordering Application</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+            padding: 25px;
+        }
+
+        .container {
+            width: 85%;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: darkorange;
+        }
+
+        input, button {
+            padding: 9px;
+            margin: 5px;
+        }
+
+        button {
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add {
+            background: green;
+            color: white;
+        }
+
+        .edit {
+            background: orange;
+        }
+
+        .delete {
+            background: crimson;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: darkorange;
+            color: white;
+        }
+
+        /* AngularJS animation */
+        .food-row.ng-enter {
+            transition: 0.5s;
+            opacity: 0;
+        }
+
+        .food-row.ng-enter-active {
+            opacity: 1;
+        }
+
+        .food-row.ng-leave {
+            transition: 0.5s;
+            opacity: 1;
+        }
+
+        .food-row.ng-leave-active {
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body ng-controller="foodController">
+
+<div class="container">
+
+    <h1>Food Ordering Application</h1>
+
+    <h3>Total Items: {{ foods.length }}</h3>
+
+    <input type="text"
+           ng-model="foodName"
+           placeholder="Enter food name">
+
+    <input type="number"
+           ng-model="foodPrice"
+           placeholder="Enter price">
+
+    <button class="add" ng-click="saveFood()">
+        {{ editIndex === -1 ? 'Add Food' : 'Update Food' }}
+    </button>
+
+    <br>
+
+    <input type="text"
+           ng-model="searchText"
+           placeholder="Search food">
+
+    <table>
+        <tr>
+            <th>Food Name</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+
+        <tr class="food-row"
+            ng-repeat="food in foods | filter:searchText | orderBy:'name'">
+
+            <td>{{ food.name | capitalize }}</td>
+            <td>{{ food.price | currency:'₹' }}</td>
+
+            <td>
+                <button class="edit" ng-click="editFood(food)">
+                    Edit
+                </button>
+
+                <button class="delete" ng-click="deleteFood(food)">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<script>
+var app = angular.module("foodApp", ["ngAnimate"]);
+
+// Custom filter
+app.filter("capitalize", function() {
+    return function(text) {
+        if (!text) return "";
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    };
+});
+
+// Factory
+app.factory("FoodFactory", function() {
+    return {
+        createFood: function(name, price) {
+            return {
+                name: name,
+                price: Number(price)
+            };
+        }
+    };
+});
+
+// Service
+app.service("FoodService", function(FoodFactory) {
+    this.getFoods = function() {
+        return [
+            FoodFactory.createFood("Pizza", 200),
+            FoodFactory.createFood("Burger", 100),
+            FoodFactory.createFood("Dosa", 60)
+        ];
+    };
+});
+
+// Controller with dependency injection
+app.controller("foodController", function(
+    $scope, FoodService, FoodFactory
+) {
+    $scope.foods = FoodService.getFoods();
+    $scope.editIndex = -1;
+
+    // Create and update
+    $scope.saveFood = function() {
+        if (!$scope.foodName ||
+            $scope.foodPrice === undefined ||
+            $scope.foodPrice === null ||
+            $scope.foodPrice === "" ||
+            Number($scope.foodPrice) < 0) {
+            alert("Enter a valid food name and price");
+            return;
+        }
+
+        if ($scope.editIndex === -1) {
+            $scope.foods.push(
+                FoodFactory.createFood(
+                    $scope.foodName,
+                    $scope.foodPrice
+                )
+            );
+        } else {
+            $scope.foods[$scope.editIndex].name =
+                $scope.foodName;
+
+            $scope.foods[$scope.editIndex].price =
+                Number($scope.foodPrice);
+        }
+
+        $scope.foodName = "";
+        $scope.foodPrice = "";
+        $scope.editIndex = -1;
+    };
+
+    // Edit
+    $scope.editFood = function(food) {
+        $scope.foodName = food.name;
+        $scope.foodPrice = food.price;
+        $scope.editIndex = $scope.foods.indexOf(food);
+    };
+
+    // Delete
+    $scope.deleteFood = function(food) {
+        if (confirm("Delete this food item?")) {
+            $scope.foods.splice(
+                $scope.foods.indexOf(food), 1
+            );
+
+            if ($scope.editIndex === $scope.foods.indexOf(food)) {
+                $scope.editIndex = -1;
+                $scope.foodName = "";
+                $scope.foodPrice = "";
+            }
+        }
+    };
+});
+</script>
+
+</body>
+</html>
