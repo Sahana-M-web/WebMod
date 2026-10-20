@@ -1,12 +1,12 @@
+create folder open and run 
 node -v
 npm -v
-
-create folder open in vs run npm init -y and npm install selenium-webdriver
-
+npm init -y
+npm install selenium-webdriver
+npm install --save-dev http-server
 
 index.html
 
-```html
 <!DOCTYPE html>
 <html ng-app="bookApp">
 
@@ -56,12 +56,12 @@ index.html
 
 </body>
 </html>
-```
 
 
 create test.js
 
-```javascript
+
+
 const { Builder, By, until } = require("selenium-webdriver");
 
 async function testBookApp() {
@@ -70,10 +70,13 @@ async function testBookApp() {
         .forBrowser("chrome")
         .build();
 
+    let failed = false;
+
     try {
 
         await driver.get("http://localhost:3000");
 
+        // TEST 1: valid input
         await driver.findElement(By.id("bookName"))
             .sendKeys("Java Programming");
 
@@ -87,34 +90,37 @@ async function testBookApp() {
             5000
         );
 
-        console.log("TEST PASSED");
+        console.log("TEST 1 PASSED: book added message is correct");
+
+        // TEST 2: empty input shows an error message
+        await driver.findElement(By.id("bookName")).clear();
+
+        await driver.findElement(By.id("addBtn")).click();
+
+        await driver.wait(
+            until.elementTextIs(result, "Please enter a book name"),
+            5000
+        );
+
+        console.log("TEST 2 PASSED: empty input validation works");
 
     } catch (error) {
 
+        failed = true;
         console.log("TEST FAILED:", error.message);
 
     } finally {
 
         await driver.quit();
+        process.exit(failed ? 1 : 0);
 
     }
 }
 
 testBookApp();
-```
 
+in 1st cmd: start the app
+npx http-server -p 3000 -c-1
 
-start angu
-npm install --save-dev http-server
-
-exe
-npx http-server -p 3000
-
-Open Chrome and enter:
-http://localhost:3000
-Enter book name
-
-
-open two terminals
-term 1 angular 
-term 2 test - node test.js
+in 2nd cmd: test
+node test.js
