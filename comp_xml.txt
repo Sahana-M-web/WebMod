@@ -94,7 +94,8 @@ books.dtd
 
 
 in cmd prompt in this folder run
-python -m http.server 8000
+python -m http.server 8000(if python) or
+npx http-server -p 8000 -c-1
 
 
 in browser open
