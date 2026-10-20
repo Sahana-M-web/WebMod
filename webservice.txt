@@ -1,0 +1,140 @@
+web services
+create server.js 
+
+const express = require("express");
+const app = express();
+
+app.use(express.json());           // read JSON sent by the client
+app.use(express.static("public")); // serve the client page
+
+// Data stored in memory (no database needed)
+let books = [
+    { id: 1, title: "Learning XML", price: 450 },
+    { id: 2, title: "AngularJS Basics", price: 600 }
+];
+let nextId = 3;
+
+// GET: read all books
+app.get("/api/books", (req, res) => {
+    res.json(books);
+});
+
+// GET: read one book by id
+app.get("/api/books/:id", (req, res) => {
+    const book = books.find(b => b.id == req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+    res.json(book);
+});
+
+// POST: create a new book
+app.post("/api/books", (req, res) => {
+    const book = { id: nextId++, title: req.body.title, price: req.body.price };
+    books.push(book);
+    res.status(201).json(book);
+});
+
+// PUT: update a book
+app.put("/api/books/:id", (req, res) => {
+    const book = books.find(b => b.id == req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+    book.title = req.body.title;
+    book.price = req.body.price;
+    res.json(book);
+});
+
+// DELETE: remove a book
+app.delete("/api/books/:id", (req, res) => {
+    books = books.filter(b => b.id != req.params.id);
+    res.json({ deleted: true });
+});
+
+app.listen(3000, () => console.log("Web service running at http://localhost:3000"));
+
+
+inside public index.html
+
+<!DOCTYPE html>
+<html ng-app="bookApp">
+<head>
+    <title>Web Service Client</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        table { border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 8px 14px; }
+        th { background: darkblue; color: white; }
+    </style>
+</head>
+
+<body ng-controller="bookController">
+    <h2>Book Web Service Client</h2>
+
+    <input type="text" ng-model="title" placeholder="Title">
+    <input type="number" ng-model="price" placeholder="Price">
+    <button ng-click="save()">{{ editId ? 'Update' : 'Add' }}</button>
+
+    <table>
+        <tr><th>ID</th><th>Title</th><th>Price</th><th>Action</th></tr>
+        <tr ng-repeat="b in books">
+            <td>{{ b.id }}</td>
+            <td>{{ b.title }}</td>
+            <td>{{ b.price }}</td>
+            <td>
+                <button ng-click="edit(b)">Edit</button>
+                <button ng-click="remove(b.id)">Delete</button>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        var app = angular.module("bookApp", []);
+
+        app.controller("bookController", function ($scope, $http) {
+            $scope.editId = null;
+
+            // GET: call the web service
+            function load() {
+                $http.get("/api/books").then(function (res) {
+                    $scope.books = res.data;
+                });
+            }
+            load();
+
+            // POST or PUT
+            $scope.save = function () {
+                var data = { title: $scope.title, price: $scope.price };
+                if (!data.title || !data.price) return;
+
+                var request = $scope.editId
+                    ? $http.put("/api/books/" + $scope.editId, data)
+                    : $http.post("/api/books", data);
+
+                request.then(function () {
+                    $scope.title = "";
+                    $scope.price = "";
+                    $scope.editId = null;
+                    load();
+                });
+            };
+
+            $scope.edit = function (b) {
+                $scope.editId = b.id;
+                $scope.title = b.title;
+                $scope.price = b.price;
+            };
+
+            // DELETE
+            $scope.remove = function (id) {
+                $http.delete("/api/books/" + id).then(load);
+            };
+        });
+    </script>
+</body>
+</html>
+
+
+run:
+in cmd run npm install express
+node server.js
+
+type http://localhost:3000 in browser 
