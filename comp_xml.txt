@@ -43,6 +43,15 @@ books.xsl
         <table>
           <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th></tr>
           <xsl:for-each select="book">
+
+
+<!--if the ques is price gt than 500 <xsl:for-each select="book[price &gt; 500]">-->
+
+<!--if we want to sort <xsl:for-each select="book">
+  <xsl:sort select="title"/> -->
+
+
+
             <tr>
               <td><xsl:value-of select="@id"/></td>
               <td><xsl:value-of select="title"/></td>
