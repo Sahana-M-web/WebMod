@@ -1,0 +1,92 @@
+books.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="books.xsl"?>
+<!DOCTYPE library SYSTEM "books.dtd">
+<library>
+  <book id="1">
+    <title>Learning XML</title>
+    <author>Erik Ray</author>
+    <price>450</price>
+  </book>
+  <book id="2">
+    <title>XSLT Cookbook</title>
+    <author>Sal Mangano</author>
+    <price>600</price>
+  </book>
+  <book id="3">
+    <title>XML in a Nutshell</title>
+    <author>Elliotte Harold</author>
+    <price>550</price>
+  </book>
+</library>
+
+
+
+
+books.xsl
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <xsl:output method="html"/>
+
+  <xsl:template match="/library">
+    <html>
+      <head>
+        <!-- This links the CSS file to the HTML output -->
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+      </head>
+      <body>
+        <h2>Book List</h2>
+        <table>
+          <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th></tr>
+          <xsl:for-each select="book">
+            <tr>
+              <td><xsl:value-of select="@id"/></td>
+              <td><xsl:value-of select="title"/></td>
+              <td><xsl:value-of select="author"/></td>
+              <td><xsl:value-of select="price"/></td>
+            </tr>
+          </xsl:for-each>
+        </table>
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>
+
+
+
+
+
+books.css
+
+body  { font-family: Arial; background: #f4f4f4; }
+h2    { color: darkblue; text-align: center; }
+table { border-collapse: collapse; margin: auto; background: white; }
+th    { background: darkblue; color: white; padding: 10px 16px; }
+td    { border: 1px solid #333; padding: 8px 16px; }
+tr:nth-child(even) { background: #e8f0fe; }  /* alternate row colour */
+
+
+
+books.dtd
+
+
+<!ELEMENT library (book+)>
+<!ELEMENT book (title, author, price)>
+<!ATTLIST book id CDATA #REQUIRED>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT price (#PCDATA)>
+
+
+
+
+in cmd prompt in this folder run
+python -m http.server 8000
+
+
+in browser open
+http://localhost:8000/books.xml
