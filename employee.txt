@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+    <title>Employee Leave Management</title>
+
+    <!-- 1. AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f0f4f8;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            max-width: 700px;
+            margin: auto;
+        }
+
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        /* 2. Status colors */
+        .pending { color: red; font-weight: bold; }
+        .approved { color: green; font-weight: bold; }
+
+        /* 3. Animation */
+        .leave.ng-enter {
+            opacity: 0;
+            transition: 0.5s;
+        }
+
+        .leave.ng-enter-active {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body ng-controller="myCtrl">
+
+<div class="box">
+    <h2>Employee Leave Management</h2>
+
+    <!-- 4. Custom Directive -->
+    <leave-message></leave-message>
+
+    <!-- 5. Two-way Data Binding -->
+    <form ng-submit="applyLeave()">
+        <input ng-model="emp.name"
+               placeholder="Employee Name" required>
+
+        <select ng-model="emp.type" required>
+            <option value="">Select Leave</option>
+            <option>Sick Leave</option>
+            <option>Casual Leave</option>
+        </select>
+
+        <button type="submit">Apply</button>
+    </form>
+
+    <p>{{message}}</p>
+
+    <!-- 6. Filter -->
+    <input ng-model="search"
+           placeholder="Search employee">
+
+    <!-- 7. Display records -->
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Name</th>
+            <th>Leave Type</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        <tr class="leave"
+            ng-repeat="x in leaves | filter:search">
+            <td>{{x.name | uppercase}}</td>
+            <td>{{x.type}}</td>
+
+            <!-- 8. Custom status directive -->
+            <td>
+                <leave-status status="x.status"></leave-status>
+            </td>
+
+            <td>
+                <button ng-click="approve(x)">Approve</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script>
+// 9. Module
+var app = angular.module("myApp", ["ngAnimate"]);
+
+// 10. Factory
+app.factory("LeaveFactory", function() {
+    return {
+        create: function(name, type) {
+            return {
+                name: name,
+                type: type,
+                status: "Pending"
+            };
+        }
+    };
+});
+
+// 11. Service
+app.service("LeaveService", function(LeaveFactory) {
+    this.createLeave = function(name, type) {
+        return LeaveFactory.create(name, type);
+    };
+});
+
+// 12. Custom Directive for status color
+app.directive("leaveStatus", function() {
+    return {
+        scope: { status: "=" },
+        template: '<span ng-class="{pending: status === \'Pending\', approved: status === \'Approved\'}">{{status}}</span>'
+    };
+});
+
+// 13. Custom welcome directive
+app.directive("leaveMessage", function() {
+    return {
+        template: '<p>Apply and manage your employee leaves!</p>'
+    };
+});
+
+// 14. Controller
+app.controller("myCtrl", function($scope, LeaveService) {
+    $scope.leaves = [];
+    $scope.emp = {};
+
+    $scope.applyLeave = function() {
+        $scope.leaves.push(
+            LeaveService.createLeave(
+                $scope.emp.name,
+                $scope.emp.type
+            )
+        );
+
+        $scope.message = "Leave applied successfully!";
+        $scope.emp = {};
+    };
+
+    $scope.approve = function(x) {
+        x.status = "Approved";
+        $scope.message = "Leave approved!";
+    };
+});
+</script>
+
+</body>
+</html>
